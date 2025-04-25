@@ -1,0 +1,51 @@
+{# This template is swapped into #download-results by HTMX #}
+
+{% if success %}
+<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-md shadow-sm my-4 animate__animated animate__fadeIn">
+    <div class="flex items-center">
+        <div class="flex-shrink-0">
+            <!-- Success Icon -->
+            <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-green-800">Download Started</h3>
+            <div class="mt-2 text-sm text-green-700">
+                <p>Download process initiated for: <span class="font-semibold">{{ url }}</span></p>
+                <p class="mt-1">Images will be saved to your Pictures folder. Check the status in the server logs.</p>
+            </div>
+            <div class="mt-3">
+                <button type="button" onclick="document.querySelector('form').reset(); this.closest('.animate__animated').classList.add('animate__fadeOut');" 
+                        class="text-xs font-medium text-green-700 hover:text-green-600 focus:outline-none">
+                    Start a new download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm my-4 animate__animated animate__fadeIn">
+    <div class="flex items-center">
+        <div class="flex-shrink-0">
+            <!-- Error Icon -->
+            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error Processing Request</h3>
+            <div class="mt-2 text-sm text-red-700">
+                <p>{{ error_message | default(value="An unexpected error occurred. Please check your URL and try again.") }}</p>
+            </div>
+            <div class="mt-3">
+                <button type="button" 
+                        onclick="this.closest('.animate__animated').classList.add('animate__fadeOut');" 
+                        class="text-xs font-medium text-red-700 hover:text-red-600 focus:outline-none">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %} 

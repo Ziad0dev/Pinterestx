@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PinterestX Downloader{% endblock title %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#E60023',
+                        secondary: '#0076D7',
+                        dark: '#111111',
+                        light: '#EFEFEF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Poppins', sans-serif;
+            background-color: #FAFAFA;
+            background-image: radial-gradient(#E60023 0.5px, transparent 0.5px), 
+                              radial-gradient(#E60023 0.5px, #FAFAFA 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+        
+        .card {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-radius: 16px;
+        }
+        
+        .card:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+        
+        .htmx-indicator { 
+            opacity: 0; 
+            transition: opacity 300ms ease-in; 
+        }
+        
+        .htmx-request .htmx-indicator { 
+            opacity: 1 
+        }
+        
+        .htmx-request.htmx-indicator { 
+            opacity: 1 
+        }
+        
+        .logo {
+            font-weight: 700;
+            color: #E60023;
+            letter-spacing: -1px;
+        }
+        
+        .logo span {
+            color: #111;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <main class="container mx-auto px-4 py-10 max-w-4xl">
+        <h1 class="text-4xl text-center font-bold my-8 logo animate__animated animate__fadeIn">
+            Pinterest<span>X</span> Downloader
+        </h1>
+        
+        <div class="card animate__animated animate__fadeInUp bg-white p-8 mb-10">
+            <div id="content">
+                {% block content %}{% endblock content %}
+            </div>
+        </div>
+        
+        <footer class="text-center text-gray-500 text-sm mt-8">
+            <p>Powered by Rust, Axum, and HTMX</p>
+            <p class="mt-1">© 2023 PinterestX - Download high-quality images for personal use</p>
+        </footer>
+    </main>
+</body>
+</html> 

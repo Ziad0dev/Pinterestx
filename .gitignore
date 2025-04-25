@@ -1,0 +1,50 @@
+# Rust build artifacts
+/target/
+**/target/
+Cargo.lock
+*.rs.bk
+*.pdb
+
+# Downloaded images
+/Pictures/
+**/Pictures/
+
+# Local development files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug files
+*.log
+
+# System files
+Thumbs.db
+desktop.ini
+
+# Downloaded dependencies
+.cargo-ok
+
+# Generated documentation
+/doc/
+/docs/
+
+# Any backup files
+*.bak
+*.backup
+*-backup
+
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib 
