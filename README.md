@@ -1,135 +1,97 @@
 # PinterestX
 
-A high-performance image downloader for Pinterest written in Rust.
-
-## Overview
-
-PinterestX is a tool for downloading high-quality images from Pinterest boards, pins, and user profiles. It provides both a command-line interface and a web-based UI, allowing for flexible usage based on your preferences.
+A versatile Pinterest image downloader tool written in Rust. PinterestX allows you to easily download images from Pinterest boards, pins, or search results both through a command-line interface and a web interface.
 
 ## Features
 
-- Download images from Pinterest boards, pins, and user profiles
-- Organize images in customizable folder structures by genre and collection
-- Multiple image quality options (original, large, medium, small)
-- Web-based UI with modern design for easy use
-- Command-line interface for automation and scripting
-- Concurrent downloads for better performance
-- Automatic error handling and retry mechanisms
-
-## Requirements
-
-- Rust 1.70 or higher
-- Cargo package manager
-- Internet connection
-- Linux, macOS, or Windows operating system
+- Download images from any Pinterest URL (including search result pages)
+- Automatically detect and extract highest quality image versions
+- Smart duplicate detection to avoid downloading the same image multiple times
+- Limit the number of images to download with the max-images parameter
+- Organize downloads by genre and query
+- Command-line interface for scripting and automation
+- Simple web interface for easy use without coding knowledge
+- Fast and efficient with minimal resource usage
 
 ## Installation
 
-### From Source
+### Prerequisites
 
-1. Clone the repository:
+- Rust and Cargo (install from [rust-lang.org](https://www.rust-lang.org/tools/install))
+
+### Building from Source
+
+Clone the repository and build with Cargo:
+
 ```bash
-git clone https://github.com/yourusername/Pinterestx.git
+git clone https://github.com/Ziad0dev/Pinterestx.git
 cd Pinterestx
-```
-
-2. Build the project:
-```bash
 cargo build --release
 ```
 
-3. The compiled binary will be available at `target/release/pinterest_downloader`
-
-### Using Cargo
-
-```bash
-cargo install pinterest_downloader
-```
+The compiled binary will be available at `./target/release/pinterest_downloader`.
 
 ## Usage
 
-### Web Interface
+### Command Line Interface
 
-1. Start the web server:
-```bash
-./target/release/pinterest_downloader serve
-```
-Or if installed via Cargo:
-```bash
-pinterest_downloader serve
-```
-
-2. Open your browser and navigate to http://127.0.0.1:3000
-3. Enter a Pinterest URL and optionally specify genre and collection name
-4. Select your preferred image quality
-5. Click "Download Images" to start the download process
-
-### Command Line
+Download images from a Pinterest URL:
 
 ```bash
 # Basic usage
-pinterest_downloader download --url "https://www.pinterest.com/username/boardname/"
+./pinterest_downloader download --url "https://www.pinterest.com/username/boardname/"
 
-# Specify genre and collection name for organization
-pinterest_downloader download --url "https://www.pinterest.com/username/boardname/" --genre "Wallpapers" --query "Nature"
+# With genre and query for better organization
+./pinterest_downloader download --url "https://www.pinterest.com/username/boardname/" --genre Art --query Landscapes
 
-# Choose image quality
-pinterest_downloader download --url "https://www.pinterest.com/username/boardname/" --quality "original"
+# Specify image quality
+./pinterest_downloader download --url "https://www.pinterest.com/username/boardname/" --quality original
+
+# Download from a search URL (up to 100 images)
+./pinterest_downloader download --url "https://se.pinterest.com/search/pins/?q=dark%20gothic%20art%20wallpaper" --max-images 100
 ```
 
-Available quality options:
-- `original`: Highest quality available
-- `736x`: Large size (default)
-- `474x`: Medium size
-- `236x`: Small size
+### Web Interface
+
+Start the web server:
+
+```bash
+./pinterest_downloader serve
+```
+
+Then open `http://localhost:3000` in your browser to access the web interface.
 
 ## Image Organization
 
-Downloaded images are saved to your Pictures directory in the following structure:
+Images are saved to your Pictures directory under the following structure:
+
 ```
-~/Pictures/Pinterestx/<Genre>/<Collection>/image_001.jpg
+Pictures/
+└── Pinterestx/
+    └── [genre]/
+        └── [query]/
+            ├── image_001.jpg
+            ├── image_002.jpg
+            └── ...
 ```
-
-If genre and collection name are not specified, they default to "Uncategorized" and "Pinterest" respectively.
-
-## Maintenance and Troubleshooting
-
-### Updating the Application
-
-To update to the latest version:
-
-```bash
-git pull
-cargo build --release
-```
-
-Or with Cargo:
-```bash
-cargo install --force pinterest_downloader
-```
-
-### Common Issues
-
-1. **No images found**: Pinterest occasionally updates their HTML structure. If no images are being found, file an issue on the GitHub repository.
-
-2. **Rate limiting**: Pinterest may block your IP if you download too many images in a short time. Use the tool responsibly and consider adding delays between downloads.
-
-3. **Invalid URL**: Ensure you're using the full URL including the "https://" prefix.
-
-### Log Files
-
-The application logs important events to the console. For web server mode, all download operations are logged to help with troubleshooting.
 
 ## Project Structure
 
-- `src/`: Main source code
-- `templates/`: HTML templates for the web interface
-- `src/main.rs`: Entry point and CLI implementation
-- `templates/index.html`: Main web interface template
+```
+Pinterestx/
+├── pinterest_downloader/
+│   ├── src/
+│   │   └── main.rs         # Main application code
+│   ├── templates/          # Web templates
+│   │   └── index.html      # Main web interface
+│   │   └── partials/       # Partial templates
+│   └── Cargo.toml          # Project dependencies
+└── README.md
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 

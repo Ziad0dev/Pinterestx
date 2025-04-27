@@ -9,6 +9,13 @@ use tokio::fs::{self, File};
 use tokio::io::AsyncWriteExt;
 use url::Url;
 
+pub struct DownloadConfig {
+    pub url: Url,
+    pub genre: String,
+    pub query: String,
+    pub quality: String,
+}
+
 #[derive(Error, Debug)]
 pub enum DownloadError {
     #[error("Network request failed: {0}")]
@@ -18,7 +25,7 @@ pub enum DownloadError {
     #[error("Failed to create directory: {0}")]
     DirCreation(#[from] tokio::io::Error),
     #[error("Failed to parse URL: {0}")]
-    UrlParse(#[from] url::ParseError),
+    UrlParseError(String),
     #[error("Invalid selector: {0}")]
     Selector(String),
     #[error("Failed to parse JSON: {0}")]
@@ -33,13 +40,12 @@ pub enum DownloadError {
     PicturesDirNotFound,
     #[error("Generic error: {0}")]
     Any(#[from] anyhow::Error),
-}
-
-pub struct DownloadConfig {
-    pub url: Url,
-    pub genre: String,
-    pub query: String,
-    pub quality: String,
+    #[error("Failed to fetch Pinterest content: {0}")]
+    FetchError(String),
+    #[error("Failed to extract images: {0}")]
+    ExtractionError(String),
+    #[error("Failed to download images: {0}")]
+    DownloadError(String),
 }
 
 pub async fn download_pinterest_images(config: DownloadConfig) -> Result<(), DownloadError> {

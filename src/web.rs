@@ -3,7 +3,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::{Html, IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
     Form,
     Router,
 };
@@ -18,6 +18,7 @@ use url::Url;
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
 use std::sync::Mutex as StdMutex;
+use tower_http::services::ServeDir;
 
 // Shared application state
 #[derive(Clone)]
@@ -26,11 +27,11 @@ struct AppState {
 }
 
 #[derive(Deserialize, Debug)]
-struct DownloadRequest {
-    url: String,
-    genre: String,
-    query: String,
-    quality: String,
+pub struct DownloadRequest {
+    pub url: String,
+    pub genre: String,
+    pub query: String,
+    pub quality: String,
 }
 
 #[derive(RustEmbed)]
@@ -104,63 +105,46 @@ pub async fn run_server() -> anyhow::Result<()> {
     };
 
     let app = Router::new()
-        .route("/", get(root))
-        .route("/download", axum::routing::post(start_download))
+        .route("/", get(index_handler))
+        .route("/download", post(download_handler))
         .layer(TraceLayer::new_for_http()) // Apply logging
-        .with_state(app_state); // Pass state if needed by handlers
+        .with_state(app_state) // Pass state if needed by handlers
+        .nest_service("/static", ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     info!("Web server listening on {}", addr);
 
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await?;
 
     Ok(())
 }
 
-async fn root() -> impl IntoResponse {
-    let context = Context::new();
-    HtmlTemplate("index.html".to_string(), context)
+async fn index_handler() -> Html<&'static str> {
+    Html(include_str!("../templates/index.html"))
 }
 
-async fn start_download(
-    State(_state): State<AppState>, // Access state if needed later
-    Form(payload): Form<DownloadRequest>,
-) -> impl IntoResponse {
-    info!("Received download request: {:?}", payload);
-    let mut context = Context::new();
-    context.insert("url", &payload.url);
-
-    match Url::parse(&payload.url) {
+async fn download_handler(Form(form): Form<DownloadRequest>) -> impl IntoResponse {
+    match Url::parse(&form.url) {
         Ok(url) => {
             let config = DownloadConfig {
                 url,
-                genre: payload.genre.clone(),
-                query: payload.query.clone(),
-                quality: payload.quality.clone(),
+                genre: form.genre,
+                query: form.query,
+                quality: form.quality,
             };
 
-            // Spawn the download task in the background
+            // Spawn a task to handle the download
             tokio::spawn(async move {
-                info!("Starting background download for {}", config.url);
                 match download_pinterest_images(config).await {
-                    Ok(_) => info!("Background download completed successfully."),
-                    Err(e) => {
-                        eprintln!("Background download failed: {}", e); // Log error server-side
-                        // TODO: Implement a way to notify the user about background failures
-                        // (e.g., WebSockets, status endpoint, database flag)
-                    }
+                    Ok(_) => println!("Download completed successfully"),
+                    Err(e) => eprintln!("Download failed: {}", e),
                 }
             });
 
-            context.insert("success", &true);
+            Html("<div class='success'>Download started!</div>")
         }
-        Err(e) => {
-            context.insert("success", &false);
-            context.insert("error_message", &format!("Invalid URL: {}", e));
-        }
+        Err(e) => Html(format!("<div class='error'>Invalid URL: {}</div>", e).as_str()),
     }
-
-    // Return an immediate response indicating the task was started (or failed validation)
-    HtmlTemplate("partials/download_results.html".to_string(), context)
 } 

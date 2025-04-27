@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="text-center mb-8">
-    <p class="text-gray-600 mb-6">Download high-quality images from Pinterest for your wallpapers, design projects, and more!</p>
+    <p class="text-gray-600 dark:text-gray-300 mb-6">Download high-quality images from Pinterest for your wallpapers, design projects, and more!</p>
     
     <div class="flex justify-center mb-6">
         <div class="inline-flex space-x-1">
@@ -15,48 +15,102 @@
     </div>
 </div>
 
-<form hx-post="/download"
+<!-- Quick presets for faster inputs -->
+<div class="flex flex-wrap justify-center gap-2 mb-6">
+    <button type="button" class="quick-preset-button px-3 py-1 text-xs rounded-full border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition" data-genre="Art" data-query="Digital Art">Art: Digital Art</button>
+    <button type="button" class="quick-preset-button px-3 py-1 text-xs rounded-full border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition" data-genre="Wallpapers" data-query="Nature">Wallpapers: Nature</button>
+    <button type="button" class="quick-preset-button px-3 py-1 text-xs rounded-full border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition" data-genre="Design" data-query="UI Inspiration">Design: UI Inspiration</button>
+    <button type="button" class="quick-preset-button px-3 py-1 text-xs rounded-full border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition" data-genre="Fashion" data-query="Outfits">Fashion: Outfits</button>
+</div>
+
+<form id="download-form"
+      hx-post="/download"
       hx-target="#download-results"
       hx-swap="innerHTML"
       hx-indicator="#loading-indicator"
       class="space-y-6">
 
     <div class="mb-6">
-        <label for="url" class="block text-sm font-semibold text-gray-700 mb-2">Pinterest URL <span class="text-primary">*</span></label>
-        <input type="url" id="url" name="url" required
-               class="input-field w-full px-4 py-3 rounded-lg focus:outline-none"
-               placeholder="https://www.pinterest.com/username/board-name/">
-        <p class="text-xs text-gray-500 mt-1">Enter a Pinterest board, pin, or profile URL</p>
+        <label for="url" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Pinterest URL <span class="text-primary">*</span></label>
+        <div class="relative">
+            <input type="url" id="url" name="url" required
+                   class="input-field w-full px-4 py-3 rounded-lg focus:outline-none pr-10"
+                   placeholder="https://www.pinterest.com/username/board-name/"
+                   pattern="https://(www\.)?(([a-z]{2}\.)?pinterest\.[a-z]{2,}|pin\.it)/[^/]+"
+                   title="Enter a valid Pinterest URL"
+                   autocomplete="off"
+                   list="recent-urls">
+            <datalist id="recent-urls">
+                <!-- Populated dynamically with JavaScript -->
+            </datalist>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <button type="button" id="paste-url" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter a Pinterest board, pin, profile URL, or search URL</p>
+        <div id="url-validation-message" class="text-red-500 text-xs mt-1 hidden">Please enter a valid Pinterest URL</div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-            <label for="genre" class="block text-sm font-semibold text-gray-700 mb-2">Genre <span class="text-gray-400">(optional)</span></label>
+            <label for="genre" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Genre <span class="text-gray-400 dark:text-gray-400">(optional)</span></label>
             <input type="text" id="genre" name="genre"
                    class="input-field w-full px-4 py-3 rounded-lg focus:outline-none"
-                   placeholder="e.g., Landscapes, Anime">
-            <p class="text-xs text-gray-500 mt-1">Category for organizing downloads</p>
+                   placeholder="e.g., Landscapes, Anime"
+                   maxlength="50"
+                   pattern="[a-zA-Z0-9\s\-_]+"
+                   title="Only letters, numbers, spaces, and hyphens allowed"
+                   list="genre-suggestions">
+            <datalist id="genre-suggestions">
+                <!-- Common genre suggestions -->
+                <option value="Art"></option>
+                <option value="Photography"></option>
+                <option value="Design"></option>
+                <option value="Fashion"></option>
+                <option value="Food"></option>
+                <option value="Travel"></option>
+                <option value="Technology"></option>
+                <option value="Wallpapers"></option>
+            </datalist>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Category for organizing downloads</p>
         </div>
 
         <div>
-            <label for="query" class="block text-sm font-semibold text-gray-700 mb-2">Collection Name <span class="text-gray-400">(optional)</span></label>
+            <label for="query" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Collection Name <span class="text-gray-400 dark:text-gray-400">(optional)</span></label>
             <input type="text" id="query" name="query"
                    class="input-field w-full px-4 py-3 rounded-lg focus:outline-none"
-                   placeholder="e.g., Nature, Profile Pics">
-            <p class="text-xs text-gray-500 mt-1">Folder name for your downloads</p>
+                   placeholder="e.g., Nature, Profile Pics"
+                   maxlength="50"
+                   pattern="[a-zA-Z0-9\s\-_]+"
+                   title="Only letters, numbers, spaces, and hyphens allowed">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Folder name for your downloads</p>
         </div>
     </div>
 
-    <div>
-        <label for="quality" class="block text-sm font-semibold text-gray-700 mb-2">Image Quality</label>
-        <select id="quality" name="quality"
-                class="input-field w-full px-4 py-3 rounded-lg bg-white focus:outline-none">
-            <option value="original">Original (Highest Quality)</option>
-            <option value="736x">Large (736px)</option>
-            <option value="474x">Medium (474px)</option>
-            <option value="236x">Small (236px)</option>
-        </select>
-        <p class="text-xs text-gray-500 mt-1">Choose the image size you need</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="quality" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Image Quality</label>
+            <select id="quality" name="quality"
+                    class="input-field w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-700 focus:outline-none">
+                <option value="original">Original (Highest Quality)</option>
+                <option value="736x">Large (736px)</option>
+                <option value="474x">Medium (474px)</option>
+                <option value="236x">Small (236px)</option>
+            </select>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Choose the image size you need</p>
+        </div>
+        
+        <div>
+            <label for="max_images" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Max Images <span class="text-gray-400 dark:text-gray-400">(optional)</span></label>
+            <input type="number" id="max_images" name="max_images" min="0" max="1000" 
+                   class="input-field w-full px-4 py-3 rounded-lg focus:outline-none"
+                   placeholder="100">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Limit number of images (0 = no limit)</p>
+        </div>
     </div>
 
     <div class="pt-4">
@@ -71,6 +125,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                <span class="ml-1 text-sm">Processing...</span>
             </span>
         </button>
     </div>
@@ -78,8 +133,251 @@
 
 <div id="download-results" class="mt-8"></div>
 
-<div class="text-center mt-8 text-sm text-gray-500">
+<!-- Recent Downloads Section -->
+<div id="recent-downloads" class="mt-12 mb-8 hidden">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Recent Downloads</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="recent-downloads-container">
+        <!-- Recent downloads will be populated here by JavaScript -->
+    </div>
+    <div class="mt-4 text-center">
+        <button id="clear-history" class="text-primary dark:text-primaryLight hover:text-primary-hover dark:hover:text-primary hover:underline text-sm font-medium">
+            Clear History
+        </button>
+    </div>
+</div>
+
+<div class="text-center mt-8 text-sm text-gray-500 dark:text-gray-300">
     <p>Note: Images are saved to your Pictures folder organized by genre and collection name.</p>
     <p>If genre and collection name are not provided, images will be saved to the default directory.</p>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // URL validation
+        const urlInput = document.getElementById('url');
+        const validationMessage = document.getElementById('url-validation-message');
+        const downloadForm = document.getElementById('download-form');
+        
+        // Pinterest URL validation regex
+        const pinterestRegex = /https?:\/\/(www\.)?((([a-z]{2})\.)?pinterest\.[a-z]{2,}|pin\.it)\/[^\/]+/i;
+        
+        // Form submission validation
+        downloadForm.addEventListener('submit', function(event) {
+            if (!pinterestRegex.test(urlInput.value)) {
+                validationMessage.classList.remove('hidden');
+                event.preventDefault();
+                return false;
+            } else {
+                validationMessage.classList.add('hidden');
+                
+                // Save to recent downloads when submitting
+                if (urlInput.value.trim() !== '') {
+                    saveToRecentDownloads();
+                }
+            }
+        });
+        
+        // URL field validation on input
+        urlInput.addEventListener('input', function() {
+            if (this.value && !pinterestRegex.test(this.value)) {
+                validationMessage.classList.remove('hidden');
+            } else {
+                validationMessage.classList.add('hidden');
+            }
+        });
+        
+        // Paste URL button
+        document.getElementById('paste-url').addEventListener('click', function() {
+            navigator.clipboard.readText()
+                .then(text => {
+                    // Try to extract Pinterest URL from text
+                    const matchResult = text.match(pinterestRegex);
+                    if (matchResult) {
+                        urlInput.value = matchResult[0];
+                        validationMessage.classList.add('hidden');
+                    } else {
+                        urlInput.value = text;
+                        // Validate after paste
+                        if (text && !pinterestRegex.test(text)) {
+                            validationMessage.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to read clipboard: ', err);
+                });
+        });
+        
+        // Sanitize inputs
+        const textInputs = document.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                // Replace any potentially harmful characters
+                this.value = this.value.replace(/[<>;&]/g, '');
+            });
+        });
+        
+        // Handle quick preset buttons
+        const presetButtons = document.querySelectorAll('.quick-preset-button');
+        presetButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const genre = this.getAttribute('data-genre');
+                const query = this.getAttribute('data-query');
+                
+                if (genre) document.getElementById('genre').value = genre;
+                if (query) document.getElementById('query').value = query;
+            });
+        });
+        
+        // Recent downloads functionality
+        function loadRecentUrls() {
+            const recentUrls = JSON.parse(localStorage.getItem('recentPinterestUrls') || '[]');
+            const datalist = document.getElementById('recent-urls');
+            
+            // Clear existing options
+            datalist.innerHTML = '';
+            
+            // Add recent URLs to datalist
+            recentUrls.forEach(url => {
+                const option = document.createElement('option');
+                option.value = url;
+                datalist.appendChild(option);
+            });
+        }
+        
+        function saveToRecentDownloads() {
+            const url = urlInput.value.trim();
+            const genre = document.getElementById('genre').value.trim();
+            const query = document.getElementById('query').value.trim();
+            const quality = document.getElementById('quality').value;
+            const maxImages = document.getElementById('max_images').value;
+            
+            // Save URL to recent URLs list
+            let recentUrls = JSON.parse(localStorage.getItem('recentPinterestUrls') || '[]');
+            
+            // Remove if already exists and add to beginning
+            recentUrls = recentUrls.filter(item => item !== url);
+            recentUrls.unshift(url);
+            
+            // Keep only the latest 10 URLs
+            if (recentUrls.length > 10) {
+                recentUrls = recentUrls.slice(0, 10);
+            }
+            
+            localStorage.setItem('recentPinterestUrls', JSON.stringify(recentUrls));
+            
+            // Save download details
+            const downloadDetails = {
+                url: url,
+                genre: genre || 'Not specified',
+                query: query || 'Not specified',
+                quality: quality,
+                maxImages: maxImages || 'No limit',
+                timestamp: new Date().toISOString()
+            };
+            
+            let recentDownloads = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+            recentDownloads.unshift(downloadDetails);
+            
+            // Keep only the latest 10 downloads
+            if (recentDownloads.length > 10) {
+                recentDownloads = recentDownloads.slice(0, 10);
+            }
+            
+            localStorage.setItem('recentDownloads', JSON.stringify(recentDownloads));
+            
+            // Refresh the display
+            displayRecentDownloads();
+            loadRecentUrls();
+        }
+        
+        function displayRecentDownloads() {
+            const recentDownloads = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+            const container = document.getElementById('recent-downloads-container');
+            const recentDownloadsSection = document.getElementById('recent-downloads');
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            if (recentDownloads.length === 0) {
+                recentDownloadsSection.classList.add('hidden');
+                return;
+            }
+            
+            recentDownloadsSection.classList.remove('hidden');
+            
+            // Add each download to the container
+            recentDownloads.forEach(download => {
+                const date = new Date(download.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                const card = document.createElement('div');
+                card.className = 'card p-4 rounded-lg';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="font-medium text-gray-800 dark:text-white truncate" title="${download.url}">
+                            ${truncateUrl(download.url, 30)}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-300">
+                        <div><span class="font-medium">Genre:</span> ${download.genre}</div>
+                        <div><span class="font-medium">Collection:</span> ${download.query}</div>
+                        <div><span class="font-medium">Quality:</span> ${download.quality}</div>
+                        <div><span class="font-medium">Max Images:</span> ${download.maxImages}</div>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <button class="reuse-download text-primary dark:text-primaryLight hover:text-primary-hover dark:hover:text-primary hover:underline text-xs font-medium" 
+                                data-url="${download.url}" 
+                                data-genre="${download.genre !== 'Not specified' ? download.genre : ''}" 
+                                data-query="${download.query !== 'Not specified' ? download.query : ''}"
+                                data-quality="${download.quality}"
+                                data-max="${download.maxImages !== 'No limit' ? download.maxImages : ''}">
+                            Reuse Settings
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            // Add click handler for reuse buttons
+            document.querySelectorAll('.reuse-download').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    const genre = this.getAttribute('data-genre');
+                    const query = this.getAttribute('data-query');
+                    const quality = this.getAttribute('data-quality');
+                    const maxImages = this.getAttribute('data-max');
+                    
+                    document.getElementById('url').value = url;
+                    document.getElementById('genre').value = genre;
+                    document.getElementById('query').value = query;
+                    document.getElementById('quality').value = quality;
+                    document.getElementById('max_images').value = maxImages;
+                    
+                    // Scroll to form
+                    document.getElementById('download-form').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+        }
+        
+        // Truncate URL for display
+        function truncateUrl(url, maxLength) {
+            if (url.length <= maxLength) return url;
+            return url.substring(0, maxLength) + '...';
+        }
+        
+        // Clear history button
+        document.getElementById('clear-history').addEventListener('click', function() {
+            localStorage.removeItem('recentDownloads');
+            localStorage.removeItem('recentPinterestUrls');
+            displayRecentDownloads();
+            loadRecentUrls();
+        });
+        
+        // Initial load
+        loadRecentUrls();
+        displayRecentDownloads();
+    });
+</script>
 {% endblock content %} 

@@ -1,109 +1,638 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}PinterestX Downloader{% endblock title %}</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <title>{% block title %}PinterestX{% endblock title %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script>
+        // Configure Tailwind colors for dark mode
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         primary: '#E60023',
-                        secondary: '#0076D7',
-                        dark: '#111111',
-                        light: '#EFEFEF',
+                        primaryLight: '#FF3B57',
+                        primary_hover: '#C9001F',
+                        secondary: '#0076D3',
+                        darkbg: '#121212',
+                        darkcard: '#1E1E1E'
                     }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        /* Base styles for light/dark mode */
+        :root {
+            --background: #f8f8f8;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e5e7eb;
+            --primary: #E60023;
+            --primary-hover: #C9001F;
+        }
         
-        body { 
-            font-family: 'Poppins', sans-serif;
-            background-color: #FAFAFA;
-            background-image: radial-gradient(#E60023 0.5px, transparent 0.5px), 
-                              radial-gradient(#E60023 0.5px, #FAFAFA 0.5px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+        html.dark {
+            --background: #121212;
+            --card-bg: #1e1e1e;
+            --text: #f0f0f0;
+            --text-secondary: #cccccc;
+            --border: #555555;
+            --primary: #FF4161;
+            --primary-hover: #FF6C83;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .card {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            border-radius: 16px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            transition: background-color 0.3s, border-color 0.3s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
-        .card:hover {
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-            transform: translateY(-2px);
+        html.dark .card {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-color: #666666;
         }
         
         .input-field {
-            border: 2px solid #eee;
-            transition: all 0.3s ease;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        
+        html.dark .input-field {
+            background-color: #2d2d2d;
+            border-color: #777777;
+            color: #ffffff;
         }
         
         .input-field:focus {
-            border-color: #E60023;
-            box-shadow: 0 0 0 3px rgba(230, 0, 35, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(230, 0, 35, 0.2);
+        }
+        
+        html.dark .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(255, 65, 97, 0.5);
+            border-color: #FF4161;
         }
         
         .submit-btn {
-            background-color: #E60023;
-            transition: all 0.3s ease;
+            background-color: var(--primary);
+            transition: background-color 0.2s;
         }
         
         .submit-btn:hover {
-            background-color: #D50022;
-            transform: translateY(-1px);
+            background-color: var(--primary-hover);
         }
         
-        .htmx-indicator { 
-            opacity: 0; 
-            transition: opacity 300ms ease-in; 
+        /* Settings drawer */
+        .settings-drawer {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--card-bg);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 50;
+            overflow-y: auto;
         }
         
-        .htmx-request .htmx-indicator { 
-            opacity: 1 
+        html.dark .settings-drawer {
+            box-shadow: -2px 0 15px rgba(0, 0, 0, 0.4);
         }
         
-        .htmx-request.htmx-indicator { 
-            opacity: 1 
+        .settings-drawer.open {
+            right: 0;
         }
         
-        .logo {
-            font-weight: 700;
-            color: #E60023;
-            letter-spacing: -1px;
+        .drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
         
-        .logo span {
-            color: #111;
+        html.dark .drawer-backdrop {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .drawer-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .fadeIn {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* Cookie consent banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: -100px;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 15px;
+            z-index: 30;
+            transition: bottom 0.5s ease;
+        }
+        
+        .cookie-banner.visible {
+            bottom: 0;
+        }
+        
+        /* Text color helpers */
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+        
+        /* Button styles */
+        html.dark .bg-gray-700 {
+            background-color: #424242;
+        }
+        
+        html.dark .bg-gray-800 {
+            background-color: #2e2e2e;
+        }
+
+        /* Improved dark mode elements */
+        html.dark .dark\:text-gray-200 {
+            color: #ffffff;
+        }
+
+        html.dark .dark\:text-gray-300 {
+            color: #f0f0f0;
+        }
+
+        html.dark .dark\:bg-gray-700 {
+            background-color: #383838;
+        }
+
+        html.dark .dark\:border-gray-600 {
+            border-color: #777777;
+        }
+
+        html.dark .dark\:hover\:bg-gray-600:hover {
+            background-color: #4d4d4d;
+        }
+
+        html.dark .dark\:hover\:text-primary:hover {
+            color: #FF5371;
+        }
+
+        /* Additional dark mode enhancements */
+        html.dark a {
+            color: #6db9ff;
+        }
+
+        html.dark a:hover {
+            color: #8eccff;
+            text-decoration: underline;
+        }
+
+        html.dark button, 
+        html.dark .btn {
+            border: 1px solid #555555;
+        }
+        
+        html.dark button:hover, 
+        html.dark .btn:hover {
+            background-color: #333333;
+        }
+        
+        html.dark select,
+        html.dark input[type="text"],
+        html.dark input[type="number"],
+        html.dark input[type="url"] {
+            background-color: #252525;
+            color: #ffffff;
+            border-color: #555555;
+        }
+        
+        html.dark label {
+            color: #dddddd;
+        }
+
+        html.dark .dark\:bg-darkcard {
+            background-color: #1E1E1E;
+        }
+
+        html.dark input::placeholder {
+            color: #aaaaaa;
+        }
+
+        html.dark select {
+            background-color: #2D2D2D;
+            border-color: #666666;
+            color: #ffffff;
+        }
+
+        html.dark option {
+            background-color: #2D2D2D;
+        }
+
+        /* Enhanced dark mode visibility */
+        html.dark {
+            --background: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-secondary: #dddddd;
+            --border: #444444;
+            --primary: #FF3B57;
+            --primary-hover: #FF6C7F;
+        }
+
+        html.dark .card {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #444444;
+        }
+
+        html.dark .input-field {
+            background-color: #2D2D2D;
+            border-color: #777777;
+            color: #ffffff;
+        }
+
+        html.dark .input-field:focus {
+            border-color: #FF5371;
+            box-shadow: 0 0 0 2px rgba(255, 83, 113, 0.5);
+        }
+
+        html.dark .dark\:bg-gray-800 {
+            background-color: #222222;
+        }
+
+        html.dark .dark\:bg-gray-700 {
+            background-color: #333333;
+        }
+
+        html.dark .settings-drawer {
+            box-shadow: -3px 0 20px rgba(0, 0, 0, 0.6);
+        }
+
+        html.dark .text-gray-600,
+        html.dark .text-gray-700 {
+            color: #e0e0e0;
+        }
+
+        html.dark button.rounded-full:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html.dark .quick-preset {
+            border: 1px solid #444444;
         }
     </style>
 </head>
 <body class="min-h-screen">
-    <main class="container mx-auto px-4 py-10 max-w-4xl">
-        <h1 class="text-4xl text-center font-bold my-8 logo animate__animated animate__fadeIn">
-            Pinterest<span>X</span> Downloader
-        </h1>
-        
-        <div class="card animate__animated animate__fadeInUp bg-white p-8 mb-10">
-            <div id="content">
-                {% block content %}{% endblock content %}
+    <!-- Header with theme toggle and settings button -->
+    <header class="py-4 px-6 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+        <div>
+            <a href="/" class="text-2xl font-bold text-primary">PinterestX</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Theme toggle -->
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <!-- Sun icon for dark mode -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <!-- Moon icon for light mode -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 block dark:hidden text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+            
+            <!-- Settings button -->
+            <button id="settings-button" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="card bg-white dark:bg-darkcard shadow-lg rounded-xl overflow-hidden p-6 md:p-8 max-w-4xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-8">Pinterest Image Downloader</h1>
+            {% block content %}{% endblock content %}
+        </div>
+    </main>
+
+    <!-- Settings drawer -->
+    <div id="drawer-backdrop" class="drawer-backdrop"></div>
+    <div id="settings-drawer" class="settings-drawer">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Settings</h2>
+                <button id="close-settings" class="rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Quick presets -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-3">Quick Presets</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="quick-preset block p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-genre="Wallpapers" data-query="Nature">
+                            Nature Wallpapers
+                        </a>
+                        <a href="#" class="quick-preset block p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-genre="Art" data-query="Digital">
+                            Digital Art
+                        </a>
+                        <a href="#" class="quick-preset block p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-genre="Fashion" data-query="Outfits">
+                            Fashion Outfits
+                        </a>
+                        <a href="#" class="quick-preset block p-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-genre="Design" data-query="UI">
+                            UI Design Inspiration
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Recent downloads -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-3">Recent Downloads</h3>
+                    <div id="recent-downloads" class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                        <p class="italic">Your download history will appear here</p>
+                    </div>
+                </div>
+                
+                <!-- Cookie management -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-3">Cookie Management</h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Allow cookie storage</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="cookie-consent" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">We use cookies to improve your experience and help with logging in to Pinterest.</p>
+                </div>
+                
+                <!-- App info -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-5 mt-5">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-3">About PinterestX</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Version 1.0</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">A fast and efficient Pinterest image downloader</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">MIT License</p>
+                </div>
             </div>
         </div>
-        
-        <footer class="text-center text-gray-500 text-sm mt-8">
-            <p>Powered by Rust, Axum, and HTMX</p>
-            <p class="mt-1">© 2023 PinterestX - Download high-quality images for personal use</p>
-        </footer>
-    </main>
+    </div>
+    
+    <!-- Cookie consent banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="container mx-auto max-w-4xl px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div class="mb-4 sm:mb-0 sm:mr-4">
+                <p class="text-sm text-gray-700 dark:text-gray-200">This website uses cookies to enhance your browsing experience and download images from Pinterest.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">These cookies are used to store Pinterest authentication information.</p>
+            </div>
+            <div class="flex space-x-2">
+                <button id="accept-cookies" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover">Accept</button>
+                <button id="decline-cookies" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600">Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggling
+            const themeToggle = document.getElementById('theme-toggle');
+            const htmlElement = document.documentElement;
+            
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlElement.classList.add('dark');
+            }
+            
+            // Toggle theme on button click
+            themeToggle.addEventListener('click', function() {
+                htmlElement.classList.toggle('dark');
+                const currentTheme = htmlElement.classList.contains('dark') ? 'dark' : 'light';
+                localStorage.setItem('theme', currentTheme);
+            });
+            
+            // Settings drawer
+            const settingsButton = document.getElementById('settings-button');
+            const closeSettings = document.getElementById('close-settings');
+            const settingsDrawer = document.getElementById('settings-drawer');
+            const drawerBackdrop = document.getElementById('drawer-backdrop');
+            
+            settingsButton.addEventListener('click', function() {
+                settingsDrawer.classList.add('open');
+                drawerBackdrop.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            function closeDrawer() {
+                settingsDrawer.classList.remove('open');
+                drawerBackdrop.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            
+            closeSettings.addEventListener('click', closeDrawer);
+            drawerBackdrop.addEventListener('click', closeDrawer);
+            
+            // Quick presets
+            const quickPresets = document.querySelectorAll('.quick-preset');
+            quickPresets.forEach(preset => {
+                preset.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const genre = this.dataset.genre;
+                    const query = this.dataset.query;
+                    
+                    // Find and update the form fields
+                    const genreField = document.getElementById('genre');
+                    const queryField = document.getElementById('query');
+                    
+                    if (genreField) genreField.value = genre;
+                    if (queryField) queryField.value = query;
+                    
+                    // Close the drawer
+                    closeDrawer();
+                    
+                    // Optional: Scroll to form
+                    const downloadForm = document.getElementById('download-form');
+                    if (downloadForm) {
+                        downloadForm.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+            
+            // Cookie consent management
+            const cookieConsent = document.getElementById('cookie-consent');
+            const cookieBanner = document.getElementById('cookie-banner');
+            const acceptCookies = document.getElementById('accept-cookies');
+            const declineCookies = document.getElementById('decline-cookies');
+            
+            // Check if consent has been given before
+            const consentStatus = localStorage.getItem('cookieConsent');
+            
+            // Update checkbox based on saved preference
+            if (consentStatus === 'true' || consentStatus === 'false') {
+                cookieConsent.checked = consentStatus === 'true';
+            } else {
+                // Show banner if no preference saved
+                setTimeout(() => {
+                    cookieBanner.classList.add('visible');
+                }, 1000);
+            }
+            
+            // Update consent on checkbox change
+            cookieConsent.addEventListener('change', function() {
+                localStorage.setItem('cookieConsent', this.checked);
+                
+                // Call API to update consent
+                fetch('/api/cookie-consent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ consent: this.checked })
+                }).catch(err => console.error('Error updating cookie consent:', err));
+            });
+            
+            // Handle banner buttons
+            acceptCookies.addEventListener('click', function() {
+                cookieConsent.checked = true;
+                localStorage.setItem('cookieConsent', 'true');
+                cookieBanner.classList.remove('visible');
+                
+                // Call API to update consent
+                fetch('/api/cookie-consent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ consent: true })
+                }).catch(err => console.error('Error updating cookie consent:', err));
+            });
+            
+            declineCookies.addEventListener('click', function() {
+                cookieConsent.checked = false;
+                localStorage.setItem('cookieConsent', 'false');
+                cookieBanner.classList.remove('visible');
+                
+                // Call API to update consent
+                fetch('/api/cookie-consent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ consent: false })
+                }).catch(err => console.error('Error updating cookie consent:', err));
+            });
+            
+            // Recent downloads (example implementation)
+            // In a real app, you might fetch this from a backend
+            function updateRecentDownloads() {
+                const recentDownloadsEl = document.getElementById('recent-downloads');
+                const recentDownloads = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+                
+                if (recentDownloads.length === 0) {
+                    return;
+                }
+                
+                recentDownloadsEl.innerHTML = '';
+                recentDownloads.slice(0, 5).forEach(download => {
+                    const downloadItem = document.createElement('div');
+                    downloadItem.className = 'p-2 bg-gray-100 dark:bg-gray-800 rounded-lg';
+                    
+                    downloadItem.innerHTML = `
+                        <div class="flex justify-between">
+                            <span class="font-medium">${download.genre || ''}/${download.query || 'Default'}</span>
+                            <span class="text-xs opacity-70">${download.count} images</span>
+                        </div>
+                        <div class="text-xs truncate opacity-70">${download.url}</div>
+                    `;
+                    
+                    recentDownloadsEl.appendChild(downloadItem);
+                });
+            }
+            
+            // Call this when the page loads and after downloads complete
+            updateRecentDownloads();
+            
+            // Add download to history (call this after a successful download)
+            window.addDownloadToHistory = function(url, genre, query, count) {
+                const recentDownloads = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+                recentDownloads.unshift({
+                    url, genre, query, count,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Limit history to 10 items
+                if (recentDownloads.length > 10) {
+                    recentDownloads.pop();
+                }
+                
+                localStorage.setItem('recentDownloads', JSON.stringify(recentDownloads));
+                updateRecentDownloads();
+            };
+            
+            // Intercept download form to add to history
+            const downloadForm = document.getElementById('download-form');
+            if (downloadForm) {
+                const originalHandler = downloadForm.getAttribute('hx-post');
+                
+                downloadForm.addEventListener('htmx:afterRequest', function(event) {
+                    // Check if it was a successful download
+                    if (event.detail.successful && event.detail.xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(event.detail.xhr.responseText);
+                            if (response && response.downloadCount) {
+                                const urlField = document.getElementById('url');
+                                const genreField = document.getElementById('genre');
+                                const queryField = document.getElementById('query');
+                                
+                                window.addDownloadToHistory(
+                                    urlField.value,
+                                    genreField.value,
+                                    queryField.value,
+                                    response.downloadCount
+                                );
+                            }
+                        } catch (e) {
+                            console.error('Error parsing download response:', e);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

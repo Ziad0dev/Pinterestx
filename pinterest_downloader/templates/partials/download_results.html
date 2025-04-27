@@ -8,11 +8,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
-        <div class="ml-3">
+        <div class="ml-3 overflow-hidden">
             <h3 class="text-lg font-semibold text-green-800">Download Started!</h3>
             <div class="mt-2 text-sm text-green-700">
-                <p>Your download from {{ url }} has been initiated.</p>
+                <p class="break-words overflow-hidden">Your download from <span class="truncate inline-block max-w-full">{{ url }}</span> has been initiated.</p>
                 <p class="mt-1">Images will be saved to your Pictures folder. This process runs in the background and may take a few moments depending on the number of images.</p>
+                {% if max_images is defined %}
+                <p class="mt-1">Limited to a maximum of {{ max_images }} images.</p>
+                {% endif %}
             </div>
             <div class="mt-4">
                 <div class="inline-block h-1 w-full bg-green-100 rounded-full overflow-hidden">
@@ -31,10 +34,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
         </div>
-        <div class="ml-3">
+        <div class="ml-3 overflow-hidden">
             <h3 class="text-lg font-semibold text-red-800">Error</h3>
             <div class="mt-2 text-sm text-red-700">
-                <p>{{ error_message | default(value="An unexpected error occurred.") }}</p>
+                <p class="break-words">{{ error_message | default(value="An unexpected error occurred.") }}</p>
                 <p class="mt-2">Please check that the URL is correct and try again. Make sure it's a valid Pinterest URL.</p>
             </div>
             <div class="mt-3">
